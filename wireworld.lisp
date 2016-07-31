@@ -83,7 +83,7 @@
     (nil     ,#'left)
     (nil     ,#'right)
     (,#'down ,#'left)
-    (,#'down ,#'up)
+    (,#'down nil)
     (,#'down ,#'right)))
 
 (defun neighbours (grid x y neighbourhood-function)
@@ -107,7 +107,12 @@
       ('empty 'empty)
       ('electron-head 'electron-tail)
       ('electron-tail 'conductor)
-      ('conductor 'conductor))))
+      ('conductor
+       (let ((electron-head-neighbours (count-electron-heads-neighbours grid x y)))
+         (if (or (= electron-head-neighbours 1)
+                 (= electron-head-neighbours 2))
+             'electron-head
+             'conductor))))))
 
 (defun update-grid (grid)
   (let ((tmp-grid (make-array (list *grid-width* *grid-height*))))
