@@ -16,6 +16,7 @@
 (defparameter *window-height* 600)
 (defparameter *window* nil)
 
+
 (defun cell-width () (/ *window-width* *grid-width*))
 (defun cell-height () (/ *window-height* *grid-height*))
 
@@ -129,9 +130,19 @@
                                        :h (- ch 1)
                                        :w (- cw 1)))))
 
+(defun coord-to-cell (x y)
+  (list (floor (/ x (cell-width)))
+        (floor (/ y (cell-height)))))
+
 (defun render-grid (grid)
   (clear-display (sdl:color :r 50 :g 50 :b 50))
   (over-grid-do grid (lambda (g x y) (draw-cell x y (aref g x y)))))
+
+(defvar *paused* nil)
+(defvar *user-insert-element* 'conductor)
+
+(defun toggle-pause ()
+  (setf *paused* (if (eq *paused* t) nil t)))
 
 (defun main ()
   (setf *grid* (load-initial-state "w1.ww"))
@@ -145,8 +156,26 @@
       (:quit-event () t)
       (:key-down-event (:key key)
                        (case key
-                         (:sdl-key-escape (push-quit-event))))
-      (:idle ()
-             (update-grid *grid*)
-             (render-grid *grid*)
-             (update-display)))))
+                         (:sdl-key-escape (push-quit-event))
+                         (:sdl-key-space (toggle-pause))
+                         (:sdl-key-c (setf *user-insert-element* 'conductor))
+                         (:sdl-key-h (setf *user-insert-element* 'electron-head))
+                         (:sdl-key-t (setf *user-insert-element* 'electron-tail))
+                         (:sdl-key-e (setf *user-insert-element* 'empty))
+                         (:sdl-key-s (if *paused*
+                                         (progn
+                                           (update-grid *grid*)
+                                           (render-grid *grid*)
+                                           (update-display))))))
+      (:mouse-button-down-event
+       (:x x :y y)
+       (when (sdl:mouse-left-p)
+         (destructuring-bind (cell-x cell-y)
+             (coord-to-cell x y)
+           (setf (aref *grid* cell-x cell-y) *user-insert-element*))
+         (progn ((render-grid *grid*)
+                 (update-display)))))
+      (:idle (unless *paused*
+               (update-grid *grid*)
+               (render-grid *grid*)
+               (update-display))))))
