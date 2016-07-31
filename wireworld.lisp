@@ -67,8 +67,53 @@
          for line = (read-line in nil)
          while line do (loop
                           for c across line
-                          for x upfrom 0 do (setf (aref grid x y) (read-cell-symbol c )))))
+                          for x upfrom 0 do (setf (aref grid x y)
+                                                  (read-cell-symbol c)))))
     grid))
+
+(defun up (idx) (if (= 0 idx) (- *grid-height* 1) (- idx 1)))
+(defun down (idx) (if (= (- *grid-height* 1) idx) 0 (+ idx 1)))
+(defun left (idx) (if (= 0 idx) (- *grid-width* 1) (- idx 1)))
+(defun right (idx) (if (= (- *grid-width* 1) idx) 0 (+ idx 1)))
+
+(defun moore-neighbours ()
+  `((,#'up   ,#'left)
+    (,#'up   nil)
+    (,#'up   ,#'right)
+    (nil     ,#'left)
+    (nil     ,#'right)
+    (,#'down ,#'left)
+    (,#'down ,#'up)
+    (,#'down ,#'right)))
+
+(defun neighbours (grid x y neighbourhood-function)
+  (flet ((get-status (x y) (aref grid x y)))
+    (loop for n in (funcall neighbourhood-function)
+       collect (get-status
+                (if (car n) (funcall (car n) x)
+                    x)
+                (if (cadr n)
+                    (funcall (cadr n) y)
+                    y)))))
+
+(defun count-electron-heads-neighbours (grid x y)
+  (count-if
+   (lambda (state) (equal state 'electron-head))
+   (neighbours grid x y #'moore-neighbours)))
+
+(defun new-cell-status (grid x y)
+  (let ((old-state (aref grid x y)))
+    (case old-state
+      ('empty 'empty)
+      ('electron-head 'electron-tail)
+      ('electron-tail 'conductor)
+      ('conductor 'conductor))))
+
+(defun update-grid (grid)
+  (let ((tmp-grid (make-array (list *grid-width* *grid-height*))))
+    (over-grid-do tmp-grid
+                  (lambda (g x y) (setf (aref g x y) (new-cell-status grid x y))))
+    (setf *grid* tmp-grid)))
 
 (defun draw-cell (x y state)
   (let ((cw (cell-width))
@@ -80,7 +125,7 @@
                                        :w (- cw 1)))))
 
 (defun render-grid (grid)
-  (clear-display *black*)
+  (clear-display (sdl:color :r 50 :g 50 :b 50))
   (over-grid-do grid (lambda (g x y) (draw-cell x y (aref g x y)))))
 
 (defun main ()
@@ -88,11 +133,15 @@
   (with-init ()
     (setf *window*
           (window *window-width* *window-height*))
-    (clear-display (sdl:color :r 150 :g 150 :b 150))
+    (clear-display (sdl:color :r 50 :g 50 :b 50))
     (render-grid *grid*)
     (update-display)
     (with-events ()
       (:quit-event () t)
       (:key-down-event (:key key)
                        (case key
-                         (:sdl-key-escape (push-quit-event)))))))
+                         (:sdl-key-escape (push-quit-event))))
+      (:idle ()
+             (update-grid *grid*)
+             (render-grid *grid*)
+             (update-display)))))
