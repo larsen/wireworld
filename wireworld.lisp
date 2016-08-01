@@ -141,11 +141,27 @@
 (defvar *paused* nil)
 (defvar *user-insert-element* 'conductor)
 
+(defun message (msg)
+  (let ((rendered-msg (format nil "~30a" msg)))
+    (sdl:draw-surface-at-*
+     (sdl:render-string-shaded rendered-msg sdl:*yellow* sdl:*black*
+                               :cache t
+                               :font (sdl:initialise-default-font))
+     1 1))
+  (update-display))
+
+(defun empty-message ()
+  (message ""))
+
+(defun set-user-insert-element (element)
+  (setf *user-insert-element* element)
+  (message (string element)))
+
 (defun toggle-pause ()
   (setf *paused* (if (eq *paused* t) nil t)))
 
 (defun main ()
-  (setf *grid* (load-initial-state "w1.ww"))
+  (setf *grid* (load-initial-state "mult.ww"))
   (with-init ()
     (setf *window*
           (window *window-width* *window-height*))
@@ -157,24 +173,24 @@
       (:key-down-event (:key key)
                        (case key
                          (:sdl-key-escape (push-quit-event))
-                         (:sdl-key-space (toggle-pause))
-                         (:sdl-key-c (setf *user-insert-element* 'conductor))
-                         (:sdl-key-h (setf *user-insert-element* 'electron-head))
-                         (:sdl-key-t (setf *user-insert-element* 'electron-tail))
-                         (:sdl-key-e (setf *user-insert-element* 'empty))
+                         (:sdl-key-space (toggle-pause)
+                                         (empty-message))
+                         (:sdl-key-c (set-user-insert-element 'conductor))
+                         (:sdl-key-h (set-user-insert-element 'electron-head))
+                         (:sdl-key-t (set-user-insert-element 'electron-tail))
+                         (:sdl-key-e (set-user-insert-element 'empty))
                          (:sdl-key-s (if *paused*
                                          (progn
                                            (update-grid *grid*)
                                            (render-grid *grid*)
                                            (update-display))))))
-      (:mouse-button-down-event
-       (:x x :y y)
-       (when (sdl:mouse-left-p)
-         (destructuring-bind (cell-x cell-y)
-             (coord-to-cell x y)
-           (setf (aref *grid* cell-x cell-y) *user-insert-element*))
-         (progn ((render-grid *grid*)
-                 (update-display)))))
+      (:mouse-button-down-event (:x x :y y)
+                                (when (sdl:mouse-left-p)
+                                  (destructuring-bind (cell-x cell-y)
+                                      (coord-to-cell x y)
+                                    (progn (setf (aref *grid* cell-x cell-y) *user-insert-element*)
+                                           (render-grid *grid*)
+                                           (update-display)))))
       (:idle (unless *paused*
                (update-grid *grid*)
                (render-grid *grid*)
