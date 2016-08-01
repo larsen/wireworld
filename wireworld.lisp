@@ -8,8 +8,8 @@
 
 (in-package :wireworld)
 
-(defparameter *grid-width* 30)
-(defparameter *grid-height* 30)
+(defparameter *grid-width* 50)
+(defparameter *grid-height* 50)
 (defparameter *grid* nil)
 
 (defparameter *window-width* 600)
