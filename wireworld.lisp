@@ -27,10 +27,12 @@
     (conductor     . sdl:*yellow*)))
 
 (defun random-cell-state ()
+  "Available cell states are taken evaluating `*cell-colors*`"
   (let ((states (mapcar (lambda (cell) (car cell)) *cell-colors*)))
     (nth (random (length states)) states)))
 
 (defun cell-color (cell-state)
+  "Returns the sdl:color corresponding to a cell state"
   (cdr (assoc cell-state `((empty . ,sdl:*black*)
                            (electron-head . ,sdl:*blue*)
                            (electron-tail . ,sdl:*red*)
@@ -51,6 +53,7 @@
     grid))
 
 (defun empty-grid ()
+  "Returns an empty grid"
   (make-array (list *grid-width* *grid-height*) :initial-element 'empty))
 
 (defun read-cell-symbol (ch)
@@ -60,6 +63,14 @@
                    (#\T . electron-tail)))))
 
 (defun load-initial-state (filename)
+  "Returns a new grid which contents are read from a file, using
+the following encoding (specified in `read-cell-symbol`:
+
+  . -> empty
+  C -> conductor
+  H -> electron-head
+  T -> election-tail
+"
   (let ((grid (empty-grid))
         (in (open filename )))
     (when in
@@ -78,6 +89,7 @@
 (defun right (idx) (if (= (- *grid-width* 1) idx) 0 (+ idx 1)))
 
 (defun moore-neighbours ()
+  "Moore neighbourhood notion (https://en.wikipedia.org/wiki/Moore_neighborhood)"
   `((,#'up   ,#'left)
     (,#'up   nil)
     (,#'up   ,#'right)
@@ -88,6 +100,8 @@
     (,#'down ,#'right)))
 
 (defun neighbours (grid x y neighbourhood-function)
+  "Returns the list of one cell's neighbours, specified using a `neighbourhood-function`
+(like for example `moore-neighbours`)"
   (flet ((get-status (x y) (aref grid x y)))
     (loop for n in (funcall neighbourhood-function)
        collect (get-status
@@ -98,11 +112,14 @@
                     y)))))
 
 (defun count-electron-heads-neighbours (grid x y)
+  "Returns the number of neighbours of a cell that are in the state 'electron-head"
   (count-if
    (lambda (state) (equal state 'electron-head))
    (neighbours grid x y #'moore-neighbours)))
 
 (defun new-cell-status (grid x y)
+  "Given a grid and the coordinates of a cell, returns its next 
+state, applyting Brian Silverman's Wireworld rules"
   (let ((old-state (aref grid x y)))
     (case old-state
       ('empty 'empty)
@@ -116,6 +133,7 @@
              'conductor))))))
 
 (defun update-grid (grid)
+  "Returns a new grid representing the next state of the proviede `grid`"
   (let ((tmp-grid (make-array (list *grid-width* *grid-height*))))
     (over-grid-do tmp-grid
                   (lambda (g x y) (setf (aref g x y) (new-cell-status grid x y))))
@@ -131,10 +149,13 @@
                                        :w (- cw 1)))))
 
 (defun coord-to-cell (x y)
+  "Converts a cell's coordinates in point coordinates for the canvas used to 
+draw cells"
   (list (floor (/ x (cell-width)))
         (floor (/ y (cell-height)))))
 
 (defun render-grid (grid)
+  "Clears the display and render the provided `grid`"
   (clear-display (sdl:color :r 50 :g 50 :b 50))
   (over-grid-do grid (lambda (g x y) (draw-cell x y (aref g x y)))))
 
@@ -161,6 +182,23 @@
   (setf *paused* (if (eq *paused* t) nil t)))
 
 (defun main ()
+  "Wireworld simulator and editor. Loads from a file the initial configuration
+and starts the simulation.
+
+Commands:
+
+SPACE toggles pause.
+
+When the simulation is paused, there are other commands available:
+
+'s' - the simulation is advanced one step
+<left mouse click> - inserts the current element on the grid (current element is written 
+in the upper-left corner of the window
+'c' - sets current element to conductor
+'h' - sets current element to electron-head
+'t' - sets current element to electron-tail
+'e' - sets current element to empty
+"
   (setf *grid* (load-initial-state "mult.ww"))
   (with-init ()
     (setf *window*
