@@ -1,6 +1,6 @@
 Brian Silverman's Wireworld
 
-![screenshot.png]()
+![](screenshot.png)
 
 ## Usage
 
@@ -10,7 +10,7 @@ When the simulation is paused, there are other commands available:
 
 - `s` - the simulation is advanced one step
 
-- <left mouse click> - inserts the current element on the grid
+- `left mouse click` - inserts the current element on the grid
   (current element is written in the upper-left corner of the window
 
 - `c` - sets current element to conductor
