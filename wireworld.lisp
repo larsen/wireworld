@@ -1,4 +1,4 @@
-;; Brian Silverman's Wirewolrd
+;;;; Brian Silverman's Wireworld
 
 (ql:quickload "lispbuilder-sdl")
 
