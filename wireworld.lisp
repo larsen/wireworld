@@ -139,12 +139,14 @@ state, applyting Brian Silverman's Wireworld rules"
                   (lambda (g x y) (setf (aref g x y) (new-cell-status grid x y))))
     (setf *grid* tmp-grid)))
 
-(defun draw-cell (x y state)
+(defun draw-cell (x y state &optional (dx 0) (dy 0))
+  "Draw a cell representation, using the colors returned by `cell-color`.
+Optionally, user can specify a displacement"
   (let ((cw (cell-width))
         (ch (cell-height)))
     (fill-surface (cell-color state)
-                  :template (rectangle :x (+ 1 (* x ch))
-                                       :y (+ 1 (* y cw))
+                  :template (rectangle :x (+ dx 1 (* x ch))
+                                       :y (+ dy 1 (* y cw))
                                        :h (- ch 1)
                                        :w (- cw 1)))))
 
