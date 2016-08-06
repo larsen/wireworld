@@ -1,11 +1,5 @@
 ;;;; Brian Silverman's Wireworld
 
-(ql:quickload "lispbuilder-sdl")
-
-(defpackage :wireworld
-  (:use :cl :sdl)
-  (:export main))
-
 (in-package :wireworld)
 
 (defparameter *grid-width* 50)
@@ -15,7 +9,6 @@
 (defparameter *window-width* 600)
 (defparameter *window-height* 600)
 (defparameter *window* nil)
-
 
 (defun cell-width () (/ *window-width* *grid-width*))
 (defun cell-height () (/ *window-height* *grid-height*))
