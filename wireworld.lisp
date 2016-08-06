@@ -38,11 +38,13 @@
                            (electron-tail . ,sdl:*red*)
                            (conductor . ,sdl:*yellow*)))))
 
-(defun over-grid-do (grid f)
+(defun over-grid-do (grid f &optional (w *grid-width*) (h *grid-height*))
+  "Call function `f` for every element in the grid `grid`. Optionally,
+user can provide width and height of the grid."
   (loop
-     for i from 0 to (- *grid-width* 1)
+     for i from 0 to (- w 1)
      do (loop
-           for j from 0 to (- *grid-height* 1)
+           for j from 0 to (- h 1)
            do (funcall f grid i j))))
 
 (defun init-grid ()
