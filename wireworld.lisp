@@ -228,7 +228,8 @@ in the upper-left corner of the window
                                 (when (sdl:mouse-left-p)
                                   (destructuring-bind (cell-x cell-y)
                                       (coord-to-cell x y)
-                                    (progn (setf (aref *grid* cell-x cell-y) *user-insert-element*)
+                                    (progn (setf (aref *grid* cell-x cell-y)
+                                                 *user-insert-element*)
                                            (render-grid *grid*)
                                            (update-display)))))
       (:idle (unless *paused*
