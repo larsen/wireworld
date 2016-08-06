@@ -10,8 +10,8 @@
 (defparameter *window-height* 600)
 (defparameter *window* nil)
 
-(defun cell-width () (/ *window-width* *grid-width*))
-(defun cell-height () (/ *window-height* *grid-height*))
+(defvar *cell-width* (/ *window-width* *grid-width*))
+(defvar *cell-height* (/ *window-height* *grid-height*))
 
 (defparameter *cell-colors*
   '((empty         . sdl:*black*)
@@ -137,8 +137,8 @@ state, applyting Brian Silverman's Wireworld rules"
 (defun draw-cell (x y state &optional (dx 0) (dy 0))
   "Draw a cell representation, using the colors returned by `cell-color`.
 Optionally, user can specify a displacement"
-  (let ((cw (cell-width))
-        (ch (cell-height)))
+  (let ((cw *cell-width*)
+        (ch *cell-height*))
     (fill-surface (cell-color state)
                   :template (rectangle :x (+ dx 1 (* x ch))
                                        :y (+ dy 1 (* y cw))
@@ -148,8 +148,8 @@ Optionally, user can specify a displacement"
 (defun coord-to-cell (x y)
   "Converts a cell's coordinates in point coordinates for the canvas used to 
 draw cells"
-  (list (floor (/ x (cell-width)))
-        (floor (/ y (cell-height)))))
+  (list (floor (/ x *cell-width*))
+        (floor (/ y *cell-height*))))
 
 (defun render-grid (grid)
   "Clears the display and render the provided `grid`"
@@ -184,6 +184,20 @@ draw cells"
 (defun toggle-pause ()
   (setf *paused* (if (eq *paused* t) nil t)))
 
+(defun incr-cell-size ()
+  (if (< *cell-width* 50)
+      (progn (setq *cell-width* (+ *cell-width* 2))
+             (setq *cell-height* (+ *cell-height* 2)))))
+
+(defun decr-cell-size ()
+  (if (> *cell-width* 2)
+      (progn (setq *cell-width* (- *cell-width* 2))
+             (setq *cell-height* (- *cell-height* 2)))))
+
+(defun reset-cell-size ()
+  (progn (setq *cell-width* (/ *window-width* *grid-width*))
+         (setq *cell-height* (/ *window-height* *grid-height*))))
+
 (defun main ()
   "Wireworld simulator and editor. Loads from a file the initial configuration
 and starts the simulation.
@@ -192,11 +206,14 @@ Commands:
 
 SPACE toggles pause.
 
+'=' - zoom in
+'-' - zoom out
+'0' - reset cell size
+'s' - the simulation is advanced one step
+<left mouse click> - inserts the current element on the grid (current element is written in the upper-left corner of the window
+
 When the simulation is paused, there are other commands available:
 
-'s' - the simulation is advanced one step
-<left mouse click> - inserts the current element on the grid (current element is written 
-in the upper-left corner of the window
 'c' - sets current element to conductor
 'h' - sets current element to electron-head
 't' - sets current element to electron-tail
@@ -216,6 +233,9 @@ in the upper-left corner of the window
                          (:sdl-key-escape (push-quit-event))
                          (:sdl-key-space (toggle-pause)
                                          (empty-message))
+                         (:sdl-key-equals (incr-cell-size))
+                         (:sdl-key-minus (decr-cell-size))
+                         (:sdl-key-0 (reset-cell-size))
                          (:sdl-key-c (set-user-insert-element 'conductor))
                          (:sdl-key-h (set-user-insert-element 'electron-head))
                          (:sdl-key-t (set-user-insert-element 'electron-tail))
