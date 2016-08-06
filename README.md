@@ -33,4 +33,4 @@ This has to be provided as a text file, using the following encoding:
 -  `H`: electron-head
 -  `T`: election-tail
 
-See [ww.w1](ww.w1) for an example.
+See [w1.ww](w1.ww) for an example.
