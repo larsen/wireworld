@@ -182,6 +182,12 @@ draw cells"
   (setf *user-insert-element* element)
   (message (string element)))
 
+(defun render-grid-element-on-top (grid-element dx dy)
+  (over-grid-do grid-element
+                (lambda (g x y) (draw-cell x y (aref g x y) dx dy))
+                (array-dimension grid-element 0)
+                (array-dimension grid-element 1)))
+
 (defun toggle-pause ()
   (setf *paused* (if (eq *paused* t) nil t)))
 
